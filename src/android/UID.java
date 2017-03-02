@@ -3,7 +3,7 @@
  * Distributed under the MIT License.
  * (See accompanying file LICENSE or copy at http://opensource.org/licenses/MIT)
  */
-package org.hygieiasoft.cordova.uid;
+package com.gotojmp.cordova.uid;
 
 import android.Manifest;
 import android.content.Context;
