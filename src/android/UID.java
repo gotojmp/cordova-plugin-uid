@@ -10,9 +10,9 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.telephony.TelephonyManager;
 import android.provider.Settings;
-import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.util.Log;
+import android.os.Build;
 
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CordovaInterface;
@@ -23,6 +23,10 @@ import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.net.NetworkInterface;
+import java.util.Collections;
+import java.util.List;
 
 public class UID extends CordovaPlugin {
 
@@ -62,9 +66,7 @@ public class UID extends CordovaPlugin {
 		UID.uuid = getUuid(context);
 
 		if( !PermissionHelper.hasPermission(this, Manifest.permission.READ_PHONE_STATE) ) {
-			PermissionHelper.requestPermission(this, PHONE_STATE_CODE,
-					Manifest.permission.READ_PHONE_STATE);
-
+			PermissionHelper.requestPermission(this, PHONE_STATE_CODE, Manifest.permission.READ_PHONE_STATE);
 			UID.imei = "";
 			UID.imsi = "";
 			UID.iccid = "";
@@ -160,14 +162,61 @@ public class UID extends CordovaPlugin {
 	 * @return
 	 */
 	public String getMac(Context context) {
-		final WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-		final WifiInfo wInfo = wifiManager.getConnectionInfo();
-		String mac = wInfo.getMacAddress();
-		return mac;
+        if (Build.VERSION.SDK_INT >= 23) { // Build.VERSION_CODES.M
+            return getMacAddress();
+        }
+        return getLegacyMacAddress(context);
 	}
 
-	public void onRequestPermissionResult(int requestCode, String[] permissions,
-										  int[] grantResults) throws JSONException {
+    /**
+     * Gets the mac address on version < Marshmallow.
+     *
+     * @return the mac address
+     */
+    private String getLegacyMacAddress(Context context) {
+
+        String macAddress;
+
+        WifiManager wm = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+        macAddress = wm.getConnectionInfo().getMacAddress();
+
+        if (macAddress == null || macAddress.length() == 0) {
+            macAddress = "02:00:00:00:00:00";
+        }
+
+        return macAddress;
+
+    }
+
+	private String getMacAddress() {
+		try {
+			List<NetworkInterface> all = Collections.list(NetworkInterface.getNetworkInterfaces());
+
+			for (NetworkInterface nif : all) {
+				if (!nif.getName().equalsIgnoreCase("wlan0")) continue;
+
+				byte[] macBytes = nif.getHardwareAddress();
+				if (macBytes == null) {
+					return "";
+				}
+
+				StringBuilder res1 = new StringBuilder();
+				for (byte b : macBytes) {
+					res1.append(String.format("%02x", (b & 0xFF)) + ":");
+				}
+
+				if (res1.length() > 0) {
+					res1.deleteCharAt(res1.length() - 1);
+				}
+
+				return res1.toString();
+			}
+		} catch (Exception ex) { }
+
+		return "02:00:00:00:00:00";
+	}
+
+	public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException {
 
 		Log.d(TAG, "onRequestPermissionResult: ***");
 
