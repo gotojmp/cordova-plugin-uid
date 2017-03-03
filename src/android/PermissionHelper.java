@@ -1,4 +1,4 @@
-package org.hygieiasoft.cordova.uid;
+package com.gotojmp.cordova.uid;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
