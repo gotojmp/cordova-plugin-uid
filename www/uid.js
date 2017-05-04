@@ -7,12 +7,10 @@ var cordova = require('cordova');
 var exec = require('cordova/exec');
 var utils = require('cordova/utils');
 
-if (cordova.platformId == 'android') {
-    exec(function(uid) {
-        for (var i in uid) {
-            exports[i] = uid[i];
-        }
-    }, function(err) {
-        utils.alert("[ERROR] Error initializing Cordova uid pluging: " + err);
-    }, "UID", "getUID", []);
-}
+exec(function(uid) {
+    for (var i in uid) {
+        exports[i] = uid[i];
+    }
+}, function(err) {
+    utils.alert("[ERROR] Error initializing Cordova uid pluging: " + err);
+}, "UID", "getUID", []);
